@@ -7,16 +7,18 @@ type AppView = "home" | "workspace";
 
 function App() {
   const [view, setView] = useState<AppView>("home");
+  const [workspaceKey, setWorkspaceKey] = useState(0);
 
-  function openWorkspace() {
+  function createNewWorkspace() {
+    setWorkspaceKey((currentKey) => currentKey + 1);
     setView("workspace");
   }
 
   if (view === "workspace") {
-    return <Workspace onNew={openWorkspace} />;
+    return <Workspace key={workspaceKey} onNew={createNewWorkspace} />;
   }
 
-  return <Home onNew={openWorkspace} />;
+  return <Home onNew={createNewWorkspace} />;
 }
 
 export default App;

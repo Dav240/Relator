@@ -1,7 +1,7 @@
 import { useState } from "react";
 
-import { loadDiagramFromPicker } from "./features/file/load";
-import type { RelatorDiagramData } from "./features/file/save";
+import { loadDiagramFromPath, loadDiagramFromPicker } from "./features/file/load";
+import type { LoadedRelatorDiagram } from "./features/file/load";
 import Home from "./features/homepage/Home";
 import Workspace from "./features/workspace/Workspace";
 
@@ -9,7 +9,9 @@ type AppView = "home" | "workspace";
 
 function App() {
   const [view, setView] = useState<AppView>("home");
-  const [initialDiagram, setInitialDiagram] = useState<RelatorDiagramData | null>(null);
+  const [initialDiagram, setInitialDiagram] = useState<LoadedRelatorDiagram | null>(
+    null,
+  );
   const [workspaceKey, setWorkspaceKey] = useState(0);
 
   function createNewWorkspace() {
@@ -18,9 +20,11 @@ function App() {
     setView("workspace");
   }
 
-  async function openDiagram() {
+  async function openDiagram(path?: string) {
     try {
-      const diagram = await loadDiagramFromPicker();
+      const diagram = path
+        ? await loadDiagramFromPath(path)
+        : await loadDiagramFromPicker();
 
       if (!diagram) {
         return;

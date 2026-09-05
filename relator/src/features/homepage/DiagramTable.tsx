@@ -12,6 +12,7 @@ type DiagramFile = {
   created_at: number | null;
   modified_at: number | null;
   name: string;
+  path: string;
 };
 
 function formatTimestamp(timestamp: number | null) {
@@ -25,7 +26,15 @@ function formatTimestamp(timestamp: number | null) {
   }).format(new Date(timestamp));
 }
 
-function DiagramTable({ diagrams }: { diagrams: DiagramFile[] }) {
+function DiagramTable({
+  diagrams,
+  onDelete,
+  onOpen,
+}: {
+  diagrams: DiagramFile[];
+  onDelete: (path: string) => void;
+  onOpen: (path: string) => void;
+}) {
   return (
     <ScrollArea className="h-full w-full rounded-sm border bg-background">
       <Table>
@@ -40,13 +49,14 @@ function DiagramTable({ diagrams }: { diagrams: DiagramFile[] }) {
         </TableHeader>
         <TableBody>
           {diagrams.map((diagram) => (
-            <TableRow key={diagram.name}>
+            <TableRow key={diagram.path}>
               <TableCell>{formatTimestamp(diagram.created_at)}</TableCell>
               <TableCell>{formatTimestamp(diagram.modified_at)}</TableCell>
               <TableCell>{diagram.name}</TableCell>
               <TableCell>
                 <button
                   className="rounded-sm border px-2 py-1 text-sm hover:bg-muted"
+                  onClick={() => onOpen(diagram.path)}
                   type="button"
                 >
                   Open
@@ -55,6 +65,7 @@ function DiagramTable({ diagrams }: { diagrams: DiagramFile[] }) {
               <TableCell>
                 <button
                   className="rounded-sm border px-2 py-1 text-sm hover:bg-muted"
+                  onClick={() => onDelete(diagram.path)}
                   type="button"
                 >
                   Delete

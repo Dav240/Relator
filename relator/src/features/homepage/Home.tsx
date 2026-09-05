@@ -1,11 +1,18 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
+import { deleteDiagram } from "../file/delete";
 import { DiagramTable, type DiagramFile } from "./DiagramTable";
 import { EmptyState } from "./Empty";
 import { AppMenubar } from "../global/Menubar";
 
-function Home({ onNew, onOpen }: { onNew: () => void; onOpen: () => void }) {
+function Home({
+  onNew,
+  onOpen,
+}: {
+  onNew: () => void;
+  onOpen: (path?: string) => void;
+}) {
   const [diagrams, setDiagrams] = useState<DiagramFile[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,6 +45,19 @@ function Home({ onNew, onOpen }: { onNew: () => void; onOpen: () => void }) {
     };
   }, []);
 
+  async function deleteSavedDiagram(path: string) {
+    try {
+      await deleteDiagram(path);
+      setDiagrams((currentDiagrams) =>
+        currentDiagrams.filter((diagram) => diagram.path !== path),
+      );
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error ? deleteError.message : String(deleteError),
+      );
+    }
+  }
+
   return (
     <main className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="relative z-10 flex min-h-8 items-center border-b border-border bg-background px-2">
@@ -52,7 +72,11 @@ function Home({ onNew, onOpen }: { onNew: () => void; onOpen: () => void }) {
         ) : diagrams.length === 0 ? (
           <EmptyState />
         ) : (
-          <DiagramTable diagrams={diagrams} />
+          <DiagramTable
+            diagrams={diagrams}
+            onDelete={deleteSavedDiagram}
+            onOpen={onOpen}
+          />
         )}
       </section>
     </main>

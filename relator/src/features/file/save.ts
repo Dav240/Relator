@@ -38,7 +38,7 @@ async function saveDiagram({
     version: RELATOR_FILE_VERSION,
   };
 
-  await invoke("save_diagram", {
+  return invoke<string>("save_diagram", {
     contents: JSON.stringify(file, null, 2),
     path,
   });

@@ -7,6 +7,10 @@ import { DEFAULT_SAVE_PATH } from "./save";
 
 const DEFAULT_LOAD_PATH = DEFAULT_SAVE_PATH;
 
+type LoadedRelatorDiagram = RelatorDiagramData & {
+  originalFilePath: string;
+};
+
 function normaliseDiagramData(file: RelatorDiagramFile): RelatorDiagramData {
   return {
     actors: file.diagram.actors ?? [],
@@ -27,6 +31,15 @@ async function loadDiagram(path = DEFAULT_LOAD_PATH) {
   return normaliseDiagramData(file);
 }
 
+async function loadDiagramFromPath(path: string): Promise<LoadedRelatorDiagram> {
+  const diagram = await loadDiagram(path);
+
+  return {
+    ...diagram,
+    originalFilePath: path,
+  };
+}
+
 async function loadDiagramFromPicker() {
   const diagramsPath = await invoke<string>("diagrams_folder_path");
   const selectedPath = await open({
@@ -40,7 +53,8 @@ async function loadDiagramFromPicker() {
     return null;
   }
 
-  return loadDiagram(selectedPath);
+  return loadDiagramFromPath(selectedPath);
 }
 
-export { DEFAULT_LOAD_PATH, loadDiagram, loadDiagramFromPicker };
+export { DEFAULT_LOAD_PATH, loadDiagram, loadDiagramFromPath, loadDiagramFromPicker };
+export type { LoadedRelatorDiagram };

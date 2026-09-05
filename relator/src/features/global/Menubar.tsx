@@ -10,20 +10,22 @@ function AppMenubar({
   onNew,
   onOpen,
   onSave,
+  onSaveAs,
 }: {
   onNew: () => void;
   onOpen?: () => void;
   onSave?: () => void;
+  onSaveAs?: () => void;
 }) {
   return (
     <Menubar className="h-7 rounded-none border-0 bg-transparent p-0 shadow-none">
       <MenubarMenu>
         <MenubarTrigger>File</MenubarTrigger>
         <MenubarContent>
-          <MenubarItem onClick={onNew}>New</MenubarItem>
-          <MenubarItem onClick={onOpen}>Open</MenubarItem>
-          <MenubarItem onClick={onSave}>Save</MenubarItem>
-          <MenubarItem>Save as</MenubarItem>
+          <MenubarItem onClick={() => onNew()}>New</MenubarItem>
+          <MenubarItem onClick={() => onOpen?.()}>Open</MenubarItem>
+          <MenubarItem onClick={() => onSave?.()}>Save</MenubarItem>
+          <MenubarItem onClick={() => onSaveAs?.()}>Save as</MenubarItem>
         </MenubarContent>
       </MenubarMenu>
       <MenubarMenu>

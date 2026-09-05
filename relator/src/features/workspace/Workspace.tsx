@@ -2,11 +2,13 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { AppMenubar } from "../global/Menubar";
+import { SaveWindow } from "../global/SaveWindow/SaveWindow";
 import { ActorPanel } from "./actor-panel/ActorPanel";
 import { ACTOR_PANEL_TOGGLE_LEFT_REM } from "./actor-panel/sizing";
 import { DEFAULT_GROUPING_COLOUR } from "./appearance";
 import { SlippyMap } from "./diagram/SlippyMap";
-import { saveDiagram, type RelatorDiagramData } from "../file/save";
+import { saveDiagram } from "../file/save";
+import type { LoadedRelatorDiagram } from "../file/load";
 import type {
   EdgeLayout,
   GroupingColour,
@@ -70,7 +72,7 @@ function Workspace({
   onNew,
   onOpen,
 }: {
-  initialDiagram: RelatorDiagramData | null;
+  initialDiagram: LoadedRelatorDiagram | null;
   onNew: () => void;
   onOpen: () => void;
 }) {
@@ -93,6 +95,10 @@ function Workspace({
       : 1,
   );
   const [isActorPanelOpen, setIsActorPanelOpen] = useState(true);
+  const [isSaveWindowOpen, setIsSaveWindowOpen] = useState(false);
+  const [originalFilePath, setOriginalFilePath] = useState(
+    initialDiagram?.originalFilePath ?? "",
+  );
   const [actors, setActors] = useState<WorkspaceActor[]>(initialDiagram?.actors ?? []);
   const [groupings, setGroupings] = useState<WorkspaceGrouping[]>(
     initialDiagram?.groupings ?? [],
@@ -294,14 +300,33 @@ function Workspace({
     updateRelationship(actorId, relationshipId, { edgeLayout });
   }
 
+  function getDiagramData() {
+    return {
+      actors,
+      groupings,
+      nextActorNumber: nextActorNumber.current,
+      nextGroupingNumber: nextGroupingNumber.current,
+    };
+  }
+
+  async function saveToPath(path: string) {
+    const savedPath = await saveDiagram({
+      ...getDiagramData(),
+      path,
+    });
+
+    setOriginalFilePath(savedPath);
+    setIsSaveWindowOpen(false);
+  }
+
   async function saveCurrentDiagram() {
+    if (!originalFilePath) {
+      setIsSaveWindowOpen(true);
+      return;
+    }
+
     try {
-      await saveDiagram({
-        actors,
-        groupings,
-        nextActorNumber: nextActorNumber.current,
-        nextGroupingNumber: nextGroupingNumber.current,
-      });
+      await saveToPath(originalFilePath);
     } catch (error) {
       console.error("Failed to save diagram", error);
     }
@@ -314,6 +339,7 @@ function Workspace({
           onNew={onNew}
           onOpen={onOpen}
           onSave={saveCurrentDiagram}
+          onSaveAs={() => setIsSaveWindowOpen(true)}
         />
       </header>
       <section className="relative flex min-h-0 flex-1 bg-muted">
@@ -369,6 +395,11 @@ function Workspace({
           onUpdateRelationshipEdgeLayout={updateRelationshipEdgeLayout}
         />
       </section>
+      <SaveWindow
+        isOpen={isSaveWindowOpen}
+        onClose={() => setIsSaveWindowOpen(false)}
+        onSave={saveToPath}
+      />
     </main>
   );
 }

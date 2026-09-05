@@ -11,6 +11,7 @@ struct DiagramFile {
     created_at: Option<u64>,
     modified_at: Option<u64>,
     name: String,
+    path: String,
 }
 
 fn timestamp_millis(time: SystemTime) -> Option<u64> {
@@ -35,9 +36,12 @@ fn resolve_diagram_path(path: &str) -> Result<PathBuf, String> {
     if path.is_absolute() {
         Ok(path)
     } else {
-        std::env::current_dir()
-            .map_err(|error| error.to_string())
-            .map(|current_dir| current_dir.join(path))
+        let relative_path = path
+            .strip_prefix("./diagrams")
+            .or_else(|_| path.strip_prefix("diagrams"))
+            .unwrap_or(path.as_path());
+
+        diagrams_path().map(|diagrams_path| diagrams_path.join(relative_path))
     }
 }
 
@@ -50,9 +54,10 @@ fn ensure_relator_extension(mut path: PathBuf) -> PathBuf {
 }
 
 fn diagrams_path() -> Result<PathBuf, String> {
-    std::env::current_dir()
-        .map_err(|error| error.to_string())
-        .map(|current_dir| current_dir.join("diagrams"))
+    std::env::var_os("LOCALAPPDATA")
+        .map(PathBuf::from)
+        .map(|local_app_data| local_app_data.join("Relator").join("diagrams"))
+        .ok_or_else(|| "LOCALAPPDATA is not available".to_owned())
 }
 
 #[tauri::command]
@@ -80,6 +85,7 @@ fn ensure_diagrams_folder() -> Result<Vec<DiagramFile>, String> {
             created_at: metadata.created().ok().and_then(timestamp_millis),
             modified_at: metadata.modified().ok().and_then(timestamp_millis),
             name,
+            path: path.to_string_lossy().to_string(),
         });
     }
 
@@ -117,11 +123,19 @@ fn load_diagram(path: String) -> Result<String, String> {
     fs::read_to_string(path).map_err(|error| error.to_string())
 }
 
+#[tauri::command]
+fn delete_diagram(path: String) -> Result<(), String> {
+    let path = ensure_relator_extension(resolve_diagram_path(&path)?);
+
+    fs::remove_file(path).map_err(|error| error.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
+            delete_diagram,
             diagrams_folder_path,
             ensure_diagrams_folder,
             load_diagram,

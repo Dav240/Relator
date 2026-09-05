@@ -6,15 +6,23 @@ import {
   MenubarTrigger,
 } from "../../ui/menubar";
 
-function AppMenubar({ onNew }: { onNew: () => void }) {
+function AppMenubar({
+  onNew,
+  onOpen,
+  onSave,
+}: {
+  onNew: () => void;
+  onOpen?: () => void;
+  onSave?: () => void;
+}) {
   return (
     <Menubar className="h-7 rounded-none border-0 bg-transparent p-0 shadow-none">
       <MenubarMenu>
         <MenubarTrigger>File</MenubarTrigger>
         <MenubarContent>
           <MenubarItem onClick={onNew}>New</MenubarItem>
-          <MenubarItem>Open</MenubarItem>
-          <MenubarItem>Save</MenubarItem>
+          <MenubarItem onClick={onOpen}>Open</MenubarItem>
+          <MenubarItem onClick={onSave}>Save</MenubarItem>
           <MenubarItem>Save as</MenubarItem>
         </MenubarContent>
       </MenubarMenu>

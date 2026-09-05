@@ -1,7 +1,11 @@
 import { useState } from "react";
 
+import {
+  DEFAULT_GROUPING_COLOUR,
+  getGroupingColourOption,
+} from "../appearance";
 import { Circle, Hexagon, Oval, Rectangle, Square, Star } from "./shapes";
-import type { GroupingShape, Position } from "../types";
+import type { GroupingColour, GroupingShape, Position } from "../types";
 
 type DragState = {
   originX: number;
@@ -37,9 +41,16 @@ function getNodeSize(label: string, shape: GroupingShape = "circle") {
   };
 }
 
-function renderShape(shape: GroupingShape, label: string) {
+function renderShape(shape: GroupingShape, label: string, colour: GroupingColour) {
   const size = getNodeSize(label, shape);
-  const props = { ...size, label };
+  const colourOption = getGroupingColourOption(colour);
+  const props = {
+    ...size,
+    borderColor: colourOption.borderColor,
+    fillColor: colourOption.fillColor,
+    label,
+    textColor: colourOption.textColor,
+  };
 
   if (shape === "oval") {
     return <Oval {...props} />;
@@ -66,11 +77,13 @@ function renderShape(shape: GroupingShape, label: string) {
 
 function Node({
   label,
+  colour = DEFAULT_GROUPING_COLOUR,
   onMove,
   position,
   shape = "circle",
 }: {
   label: string;
+  colour?: GroupingColour;
   onMove: (position: Position) => void;
   position: Position;
   shape?: GroupingShape;
@@ -117,7 +130,7 @@ function Node({
         transform: `translate(${position.x}px, ${position.y}px)`,
       }}
     >
-      {renderShape(shape, label)}
+      {renderShape(shape, label, colour)}
     </div>
   );
 }

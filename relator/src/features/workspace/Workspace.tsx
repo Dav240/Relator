@@ -4,9 +4,12 @@ import { useRef, useState } from "react";
 import { AppMenubar } from "../global/Menubar";
 import { ActorPanel } from "./actor-panel/ActorPanel";
 import { ACTOR_PANEL_TOGGLE_LEFT_REM } from "./actor-panel/sizing";
+import { DEFAULT_GROUPING_COLOUR } from "./appearance";
 import { SlippyMap } from "./diagram/SlippyMap";
+import { saveDiagram, type RelatorDiagramData } from "../file/save";
 import type {
   EdgeLayout,
+  GroupingColour,
   GroupingShape,
   Position,
   RelationshipType,
@@ -44,12 +47,56 @@ function createEdgeLayout(sourcePosition: Position, targetPosition?: Position): 
   };
 }
 
-function Workspace({ onNew }: { onNew: () => void }) {
-  const nextActorNumber = useRef(1);
-  const nextGroupingNumber = useRef(1);
+function getNextDefaultNumber(
+  items: Array<{ defaultName: string }>,
+  prefix: string,
+  fallback: number,
+) {
+  const highestNumber = items.reduce((highest, item) => {
+    const match = item.defaultName.match(new RegExp(`^${prefix} (\\d+)$`));
+
+    if (!match) {
+      return highest;
+    }
+
+    return Math.max(highest, Number(match[1]));
+  }, 0);
+
+  return Math.max(fallback, highestNumber + 1);
+}
+
+function Workspace({
+  initialDiagram,
+  onNew,
+  onOpen,
+}: {
+  initialDiagram: RelatorDiagramData | null;
+  onNew: () => void;
+  onOpen: () => void;
+}) {
+  const nextActorNumber = useRef(
+    initialDiagram
+      ? getNextDefaultNumber(
+          initialDiagram.actors,
+          "Actor",
+          initialDiagram.nextActorNumber,
+        )
+      : 1,
+  );
+  const nextGroupingNumber = useRef(
+    initialDiagram
+      ? getNextDefaultNumber(
+          initialDiagram.groupings,
+          "Grouping",
+          initialDiagram.nextGroupingNumber,
+        )
+      : 1,
+  );
   const [isActorPanelOpen, setIsActorPanelOpen] = useState(true);
-  const [actors, setActors] = useState<WorkspaceActor[]>([]);
-  const [groupings, setGroupings] = useState<WorkspaceGrouping[]>([]);
+  const [actors, setActors] = useState<WorkspaceActor[]>(initialDiagram?.actors ?? []);
+  const [groupings, setGroupings] = useState<WorkspaceGrouping[]>(
+    initialDiagram?.groupings ?? [],
+  );
 
   function addActor() {
     if (actors.length >= ACTOR_LIMIT) {
@@ -87,7 +134,7 @@ function Workspace({ onNew }: { onNew: () => void }) {
     setGroupings((currentGroupings) => [
       ...currentGroupings,
       {
-        colour: "",
+        colour: DEFAULT_GROUPING_COLOUR,
         defaultName,
         id: groupingId,
         name: defaultName,
@@ -142,6 +189,14 @@ function Workspace({ onNew }: { onNew: () => void }) {
     setGroupings((currentGroupings) =>
       currentGroupings.map((grouping) =>
         grouping.id === groupingId ? { ...grouping, shape } : grouping,
+      ),
+    );
+  }
+
+  function updateGroupingColour(groupingId: string, colour: GroupingColour) {
+    setGroupings((currentGroupings) =>
+      currentGroupings.map((grouping) =>
+        grouping.id === groupingId ? { ...grouping, colour } : grouping,
       ),
     );
   }
@@ -239,10 +294,27 @@ function Workspace({ onNew }: { onNew: () => void }) {
     updateRelationship(actorId, relationshipId, { edgeLayout });
   }
 
+  async function saveCurrentDiagram() {
+    try {
+      await saveDiagram({
+        actors,
+        groupings,
+        nextActorNumber: nextActorNumber.current,
+        nextGroupingNumber: nextGroupingNumber.current,
+      });
+    } catch (error) {
+      console.error("Failed to save diagram", error);
+    }
+  }
+
   return (
     <main className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="relative z-10 flex min-h-8 items-center border-b border-border bg-background px-2">
-        <AppMenubar onNew={onNew} />
+        <AppMenubar
+          onNew={onNew}
+          onOpen={onOpen}
+          onSave={saveCurrentDiagram}
+        />
       </header>
       <section className="relative flex min-h-0 flex-1 bg-muted">
         <button
@@ -276,6 +348,7 @@ function Workspace({ onNew }: { onNew: () => void }) {
             onRenameActor={renameActor}
             onRenameGrouping={renameGrouping}
             onRemoveActorFromGrouping={removeActorFromGrouping}
+            onUpdateGroupingColour={updateGroupingColour}
             onUpdateGroupingShape={updateGroupingShape}
             onRenameRelationship={(actorId, relationshipId, name) =>
               updateRelationship(actorId, relationshipId, { name })

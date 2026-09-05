@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
-import { Edge } from "./Edge";
+import { Edge } from "./edges/Edge";
 import { Node } from "./Node";
 import type {
   EdgeLayout,
+  GroupingColour,
   GroupingShape,
   Position,
   WorkspaceActor,
@@ -70,6 +71,13 @@ function SlippyMap({
     return (
       groupings.find((grouping) => grouping.id === actor.groupingId)?.shape ??
       "circle"
+    );
+  }
+
+  function getActorColour(actor: WorkspaceActor): GroupingColour {
+    return (
+      groupings.find((grouping) => grouping.id === actor.groupingId)?.colour ??
+      "light-blue"
     );
   }
 
@@ -186,6 +194,7 @@ function SlippyMap({
 
         {actors.map((actor) => (
           <Node
+            colour={getActorColour(actor)}
             key={actor.id}
             label={actor.name.trim() || actor.defaultName}
             onMove={(position) => onMoveActor(actor.id, position)}

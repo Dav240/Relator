@@ -4,6 +4,21 @@ type Position = {
 };
 
 type RelationshipType = "directed" | "undirected";
+type GroupingColour =
+  | "light-red"
+  | "light-orange"
+  | "light-yellow"
+  | "light-green"
+  | "light-blue"
+  | "light-indigo"
+  | "light-violet"
+  | "dark-red"
+  | "dark-orange"
+  | "dark-yellow"
+  | "dark-green"
+  | "dark-blue"
+  | "dark-indigo"
+  | "dark-violet";
 type GroupingShape = "circle" | "oval" | "square" | "rectangle" | "star" | "hexagon";
 
 type EdgeLayout = {
@@ -13,7 +28,7 @@ type EdgeLayout = {
 };
 
 type WorkspaceGrouping = {
-  colour: string;
+  colour: GroupingColour;
   defaultName: string;
   id: string;
   name: string;
@@ -39,6 +54,7 @@ type WorkspaceActor = {
 
 export type {
   EdgeLayout,
+  GroupingColour,
   GroupingShape,
   Position,
   RelationshipType,

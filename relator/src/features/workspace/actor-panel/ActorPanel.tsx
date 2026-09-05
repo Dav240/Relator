@@ -8,6 +8,7 @@ import {
   ACTOR_PANEL_WIDTH_REM,
 } from "./sizing";
 import type {
+  GroupingColour,
   GroupingShape,
   RelationshipType,
   WorkspaceActor,
@@ -36,6 +37,7 @@ function ActorPanel({
   onRelationshipTargetChange,
   onRelationshipTypeChange,
   onRemoveActorFromGrouping,
+  onUpdateGroupingColour,
   onUpdateGroupingShape,
 }: {
   actorLimit: number;
@@ -66,6 +68,7 @@ function ActorPanel({
     type: RelationshipType,
   ) => void;
   onRemoveActorFromGrouping: (actorId: string) => void;
+  onUpdateGroupingColour: (groupingId: string, colour: GroupingColour) => void;
   onUpdateGroupingShape: (groupingId: string, shape: GroupingShape) => void;
 }) {
   const canAddActor = actors.length < actorLimit;
@@ -173,9 +176,13 @@ function ActorPanel({
         >
           {groupings.map((grouping) => (
             <Grouping
+              colour={grouping.colour}
               defaultName={grouping.defaultName}
               key={grouping.id}
               name={grouping.name}
+              onColourChange={(colour) =>
+                onUpdateGroupingColour(grouping.id, colour)
+              }
               onDelete={() => onDeleteGrouping(grouping.id)}
               onRename={(name) => onRenameGrouping(grouping.id, name)}
               onShapeChange={(shape) => onUpdateGroupingShape(grouping.id, shape)}

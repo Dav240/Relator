@@ -5,7 +5,7 @@ import { DiagramTable, type DiagramFile } from "./DiagramTable";
 import { EmptyState } from "./Empty";
 import { AppMenubar } from "../global/Menubar";
 
-function Home({ onNew }: { onNew: () => void }) {
+function Home({ onNew, onOpen }: { onNew: () => void; onOpen: () => void }) {
   const [diagrams, setDiagrams] = useState<DiagramFile[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,7 +41,7 @@ function Home({ onNew }: { onNew: () => void }) {
   return (
     <main className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="relative z-10 flex min-h-8 items-center border-b border-border bg-background px-2">
-        <AppMenubar onNew={onNew} />
+        <AppMenubar onNew={onNew} onOpen={onOpen} />
       </header>
 
       <section className="flex min-h-0 flex-1 bg-muted p-4">

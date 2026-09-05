@@ -2,7 +2,11 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
 import { Textarea } from "../../../ui/textarea";
-import type { GroupingShape } from "../types";
+import {
+  getGroupingColourOption,
+  GROUPING_COLOURS,
+} from "../appearance";
+import type { GroupingColour, GroupingShape } from "../types";
 
 type ContextMenuPosition = {
   x: number;
@@ -11,16 +15,20 @@ type ContextMenuPosition = {
 
 function Grouping({
   children,
+  colour,
   defaultName,
   name,
+  onColourChange,
   onDelete,
   onRename,
   onShapeChange,
   shape,
 }: {
   children: ReactNode;
+  colour: GroupingColour;
   defaultName: string;
   name: string;
+  onColourChange: (colour: GroupingColour) => void;
   onDelete: () => void;
   onRename: (name: string) => void;
   onShapeChange: (shape: GroupingShape) => void;
@@ -29,6 +37,7 @@ function Grouping({
   const [isOpen, setIsOpen] = useState(true);
   const [contextMenuPosition, setContextMenuPosition] =
     useState<ContextMenuPosition | null>(null);
+  const selectedColour = getGroupingColourOption(colour);
   const displayName = name.trim() || defaultName;
 
   useEffect(() => {
@@ -132,10 +141,31 @@ function Grouping({
             <label className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 text-xs font-medium">
               <span>Colour</span>
               <select
-                className="h-8 min-w-0 rounded-sm border border-input bg-background px-2 text-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                defaultValue=""
+                aria-label="Grouping colour"
+                className="h-8 min-w-0 rounded-sm border px-2 text-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                onChange={(event) =>
+                  onColourChange(event.currentTarget.value as GroupingColour)
+                }
+                style={{
+                  backgroundColor: selectedColour.fillColor,
+                  borderColor: selectedColour.borderColor,
+                  color: selectedColour.fillColor,
+                }}
+                value={colour}
               >
-                <option value="" />
+                {GROUPING_COLOURS.map((colourOption) => (
+                  <option
+                    key={colourOption.value}
+                    style={{
+                      backgroundColor: colourOption.fillColor,
+                      color: colourOption.fillColor,
+                    }}
+                    title={colourOption.label}
+                    value={colourOption.value}
+                  >
+                    {colourOption.label}
+                  </option>
+                ))}
               </select>
             </label>
           </div>

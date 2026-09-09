@@ -7,9 +7,13 @@ import { EmptyState } from "./Empty";
 import { AppMenubar } from "../global/Menubar";
 
 function Home({
+  isDarkMode,
+  onDarkModeChange,
   onNew,
   onOpen,
 }: {
+  isDarkMode: boolean;
+  onDarkModeChange: (isDarkMode: boolean) => void;
   onNew: () => void;
   onOpen: (path?: string) => void;
 }) {
@@ -61,7 +65,12 @@ function Home({
   return (
     <main className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="relative z-10 flex min-h-8 items-center border-b border-border bg-background px-2">
-        <AppMenubar onNew={onNew} onOpen={onOpen} />
+        <AppMenubar
+          isDarkMode={isDarkMode}
+          onDarkModeChange={onDarkModeChange}
+          onNew={onNew}
+          onOpen={onOpen}
+        />
       </header>
 
       <section className="flex min-h-0 flex-1 bg-muted p-4">

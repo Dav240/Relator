@@ -1,12 +1,6 @@
-import { useEffect, useState } from "react";
-
 import { Textarea } from "../../../ui/textarea";
+import { useContextMenu } from "../context-menu";
 import type { RelationshipType, WorkspaceActor } from "../types";
-
-type ContextMenuPosition = {
-  x: number;
-  y: number;
-};
 
 function Relationship({
   actors,
@@ -31,50 +25,8 @@ function Relationship({
   targetActorId: string;
   type: RelationshipType;
 }) {
-  const [contextMenuPosition, setContextMenuPosition] =
-    useState<ContextMenuPosition | null>(null);
+  const { contextMenuPosition, openContextMenu } = useContextMenu();
   const targetActors = actors.filter((actor) => actor.id !== currentActorId);
-
-  useEffect(() => {
-    if (!contextMenuPosition) {
-      return;
-    }
-
-    function closeContextMenu() {
-      setContextMenuPosition(null);
-    }
-
-    function closeContextMenuOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        closeContextMenu();
-      }
-    }
-
-    window.addEventListener("click", closeContextMenu);
-    window.addEventListener("contextmenu", closeContextMenu);
-    window.addEventListener("keydown", closeContextMenuOnEscape);
-
-    return () => {
-      window.removeEventListener("click", closeContextMenu);
-      window.removeEventListener("contextmenu", closeContextMenu);
-      window.removeEventListener("keydown", closeContextMenuOnEscape);
-    };
-  }, [contextMenuPosition]);
-
-  function openContextMenu(event: React.MouseEvent<HTMLElement>) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (contextMenuPosition) {
-      setContextMenuPosition(null);
-      return;
-    }
-
-    setContextMenuPosition({
-      x: event.clientX,
-      y: event.clientY,
-    });
-  }
 
   return (
     <section

@@ -1,10 +1,6 @@
 import { useState } from "react";
 
-import {
-  DEFAULT_GROUPING_COLOUR,
-  getGroupingColourOption,
-} from "../appearance";
-import { Circle, Hexagon, Oval, Rectangle, Square, Star } from "./shapes";
+import { Shape } from "./shapes";
 import type { GroupingColour, GroupingShape, Position } from "../types";
 
 type DragState = {
@@ -14,70 +10,9 @@ type DragState = {
   pointerY: number;
 };
 
-function getNodeBaseSize(label: string) {
-  return Math.min(160, Math.max(64, 52 + label.length * 6));
-}
-
-function getNodeSize(label: string, shape: GroupingShape = "circle") {
-  const baseSize = getNodeBaseSize(label);
-
-  if (shape === "oval") {
-    return {
-      height: baseSize * 0.64,
-      width: baseSize * 1.6,
-    };
-  }
-
-  if (shape === "rectangle") {
-    return {
-      height: baseSize * 0.8,
-      width: baseSize * 1.6,
-    };
-  }
-
-  return {
-    height: baseSize,
-    width: baseSize,
-  };
-}
-
-function renderShape(shape: GroupingShape, label: string, colour: GroupingColour) {
-  const size = getNodeSize(label, shape);
-  const colourOption = getGroupingColourOption(colour);
-  const props = {
-    ...size,
-    borderColor: colourOption.borderColor,
-    fillColor: colourOption.fillColor,
-    label,
-    textColor: colourOption.textColor,
-  };
-
-  if (shape === "oval") {
-    return <Oval {...props} />;
-  }
-
-  if (shape === "square") {
-    return <Square {...props} />;
-  }
-
-  if (shape === "rectangle") {
-    return <Rectangle {...props} />;
-  }
-
-  if (shape === "star") {
-    return <Star {...props} />;
-  }
-
-  if (shape === "hexagon") {
-    return <Hexagon {...props} />;
-  }
-
-  return <Circle {...props} />;
-}
-
 function Node({
   label,
-  colour = DEFAULT_GROUPING_COLOUR,
+  colour,
   onMove,
   position,
   shape = "circle",
@@ -130,9 +65,9 @@ function Node({
         transform: `translate(${position.x}px, ${position.y}px)`,
       }}
     >
-      {renderShape(shape, label, colour)}
+      <Shape colour={colour} label={label} shape={shape} />
     </div>
   );
 }
 
-export { getNodeSize, Node };
+export { Node };

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Edge } from "./edges/Edge";
 import { Node } from "./Node";
@@ -66,19 +66,25 @@ function SlippyMap({
   });
   const [pan, setPan] = useState<Position>({ x: 0, y: 0 });
   const [panState, setPanState] = useState<PanState | null>(null);
+  const actorsById = useMemo(
+    () => new Map(actors.map((actor) => [actor.id, actor])),
+    [actors],
+  );
+  const groupingsById = useMemo(
+    () => new Map(groupings.map((grouping) => [grouping.id, grouping])),
+    [groupings],
+  );
 
   function getActorShape(actor: WorkspaceActor): GroupingShape {
-    return (
-      groupings.find((grouping) => grouping.id === actor.groupingId)?.shape ??
-      "circle"
-    );
+    return actor.groupingId
+      ? groupingsById.get(actor.groupingId)?.shape ?? "circle"
+      : "circle";
   }
 
   function getActorColour(actor: WorkspaceActor): GroupingColour {
-    return (
-      groupings.find((grouping) => grouping.id === actor.groupingId)?.colour ??
-      "light-blue"
-    );
+    return actor.groupingId
+      ? groupingsById.get(actor.groupingId)?.colour ?? "light-blue"
+      : "light-blue";
   }
 
   useEffect(() => {
@@ -139,7 +145,7 @@ function SlippyMap({
   return (
     <div
       ref={viewportRef}
-      className="relative min-w-0 flex-1 cursor-grab overflow-hidden bg-slate-50 active:cursor-grabbing"
+      className="relative min-w-0 flex-1 cursor-grab overflow-hidden bg-[var(--map-background)] active:cursor-grabbing"
       onPointerCancel={stopPanning}
       onPointerDown={startPanning}
       onPointerMove={panMap}
@@ -149,7 +155,7 @@ function SlippyMap({
         className="absolute left-0 top-0"
         style={{
           backgroundImage:
-            "radial-gradient(circle, rgb(148 163 184 / 0.55) 1px, transparent 1px)",
+            "radial-gradient(circle, var(--map-dot) 1px, transparent 1px)",
           backgroundSize: "28px 28px",
           height: mapBounds.height,
           transform: `translate(${pan.x}px, ${pan.y}px)`,
@@ -163,9 +169,7 @@ function SlippyMap({
         >
           {actors.flatMap((actor) =>
             actor.relationships.map((relationship) => {
-              const targetActor = actors.find(
-                (currentActor) => currentActor.id === relationship.targetActorId,
-              );
+              const targetActor = actorsById.get(relationship.targetActorId);
 
               if (!targetActor) {
                 return null;

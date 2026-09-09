@@ -1,16 +1,21 @@
 import type { ShapeProps } from "./types";
 
-function Circle({
+type BaseShapeProps = ShapeProps & {
+  className?: string;
+};
+
+function BaseShape({
   borderColor,
+  className = "",
   fillColor,
   height,
   label,
   textColor,
   width,
-}: ShapeProps) {
+}: BaseShapeProps) {
   return (
     <div
-      className="grid place-items-center rounded-full p-4 text-center text-sm font-medium leading-tight shadow-sm"
+      className={`grid place-items-center p-4 text-center text-sm font-medium leading-tight shadow-sm ${className}`}
       style={{
         backgroundColor: fillColor,
         border: `1px solid ${borderColor}`,
@@ -24,4 +29,4 @@ function Circle({
   );
 }
 
-export { Circle };
+export { BaseShape };

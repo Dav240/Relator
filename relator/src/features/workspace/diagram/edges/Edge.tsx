@@ -8,18 +8,19 @@ import type {
   WorkspaceRelationship,
 } from "../../types";
 
-import { 
-  getNodeCenter,
+import {
   getBoundaryPoint,
+  getNodeCenter,
   getReadableAngle,
-} from "./edge-geometry"
+} from "./edge-geometry";
 
 type DragState =
   | {
       type: "label";
       originOffset: Position;
       pointerOrigin: Position;
-    } | {
+    }
+  | {
       type: "source" | "target";
     };
 
@@ -96,9 +97,9 @@ function Edge({
     setDragState({ type });
   }
 
-    function dragEndpoint(event: React.PointerEvent<SVGCircleElement>) {
+  function dragEndpoint(event: React.PointerEvent<SVGCircleElement>) {
     if (!dragState || dragState.type === "label") {
-        return;
+      return;
     }
 
     event.preventDefault();
@@ -163,7 +164,7 @@ function Edge({
           refY="5"
           viewBox="0 0 10 10"
         >
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#111827" />
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--edge)" />
         </marker>
       </defs>
 
@@ -171,7 +172,7 @@ function Edge({
         markerEnd={
           relationship.type === "directed" ? `url(#${markerId})` : undefined
         }
-        stroke="#111827"
+        stroke="var(--edge)"
         strokeWidth="2"
         x1={sourcePoint.x}
         x2={targetPoint.x}
@@ -181,14 +182,15 @@ function Edge({
 
       {label ? (
         <text
-          className="cursor-grab fill-black text-xs font-medium active:cursor-grabbing"
+          className="cursor-grab text-xs font-medium active:cursor-grabbing"
           dominantBaseline="central"
+          fill="var(--edge-label)"
           onPointerCancel={stopDragging}
           onPointerDown={startLabelDrag}
           onPointerMove={dragLabel}
           onPointerUp={stopDragging}
           paintOrder="stroke"
-          stroke="white"
+          stroke="var(--edge-label-stroke)"
           strokeLinejoin="round"
           strokeWidth="4"
           style={{
@@ -205,25 +207,29 @@ function Edge({
       ) : null}
 
       <circle
-        className="cursor-grab fill-white stroke-slate-700 active:cursor-grabbing"
+        className="cursor-grab active:cursor-grabbing"
         cx={sourcePoint.x}
         cy={sourcePoint.y}
+        fill="var(--edge-handle-fill)"
         onPointerCancel={stopDragging}
         onPointerDown={(event) => startEndpointDrag(event, "source")}
         onPointerMove={dragEndpoint}
         onPointerUp={stopDragging}
         r="5"
+        stroke="var(--edge-handle-stroke)"
         strokeWidth="1.5"
       />
       <circle
-        className="cursor-grab fill-white stroke-slate-700 active:cursor-grabbing"
+        className="cursor-grab active:cursor-grabbing"
         cx={targetPoint.x}
         cy={targetPoint.y}
+        fill="var(--edge-handle-fill)"
         onPointerCancel={stopDragging}
         onPointerDown={(event) => startEndpointDrag(event, "target")}
         onPointerMove={dragEndpoint}
         onPointerUp={stopDragging}
         r="5"
+        stroke="var(--edge-handle-stroke)"
         strokeWidth="1.5"
       />
     </g>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 
 import { Actor } from "./Actor";
 import { Grouping } from "./Grouping";
@@ -7,6 +7,7 @@ import {
   ACTOR_PANEL_SCALE,
   ACTOR_PANEL_WIDTH_REM,
 } from "./sizing";
+import { useContextMenu } from "../context-menu";
 import type {
   GroupingColour,
   GroupingShape,
@@ -14,11 +15,6 @@ import type {
   WorkspaceActor,
   WorkspaceGrouping,
 } from "../types";
-
-type ContextMenuPosition = {
-  x: number;
-  y: number;
-};
 
 function ActorPanel({
   actorLimit,
@@ -72,9 +68,22 @@ function ActorPanel({
   onUpdateGroupingShape: (groupingId: string, shape: GroupingShape) => void;
 }) {
   const canAddActor = actors.length < actorLimit;
-  const ungroupedActors = actors.filter((actor) => !actor.groupingId);
-  const [contextMenuPosition, setContextMenuPosition] =
-    useState<ContextMenuPosition | null>(null);
+  const actorsByGroupingId = useMemo(() => {
+    const nextActorsByGroupingId = new Map<string, WorkspaceActor[]>();
+
+    for (const actor of actors) {
+      const groupingId = actor.groupingId ?? "";
+      const groupedActors = nextActorsByGroupingId.get(groupingId) ?? [];
+
+      groupedActors.push(actor);
+      nextActorsByGroupingId.set(groupingId, groupedActors);
+    }
+
+    return nextActorsByGroupingId;
+  }, [actors]);
+  const ungroupedActors = actorsByGroupingId.get("") ?? [];
+  const { closeContextMenu, contextMenuPosition, openContextMenu } =
+    useContextMenu({ ownerId: "actor-panel" });
 
   function renderActor(actor: WorkspaceActor) {
     return (
@@ -111,55 +120,6 @@ function ActorPanel({
     );
   }
 
-  useEffect(() => {
-    if (!contextMenuPosition) {
-      return;
-    }
-
-    function closeContextMenu() {
-      setContextMenuPosition(null);
-    }
-
-    function closeContextMenuOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        closeContextMenu();
-      }
-    }
-
-    window.addEventListener("click", closeContextMenu);
-    window.addEventListener("contextmenu", closeContextMenu);
-    window.addEventListener("actor-context-menu-open", closeContextMenu);
-    window.addEventListener("keydown", closeContextMenuOnEscape);
-
-    return () => {
-      window.removeEventListener("click", closeContextMenu);
-      window.removeEventListener("contextmenu", closeContextMenu);
-      window.removeEventListener("actor-context-menu-open", closeContextMenu);
-      window.removeEventListener("keydown", closeContextMenuOnEscape);
-    };
-  }, [contextMenuPosition]);
-
-  function openContextMenu(event: React.MouseEvent<HTMLElement>) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (contextMenuPosition) {
-      setContextMenuPosition(null);
-      return;
-    }
-
-    window.dispatchEvent(
-      new CustomEvent("actor-context-menu-open", {
-        detail: { actorId: "" },
-      }),
-    );
-
-    setContextMenuPosition({
-      x: event.clientX,
-      y: event.clientY,
-    });
-  }
-
   return (
     <aside
       className="flex shrink-0 flex-col border-r border-border bg-background"
@@ -188,9 +148,9 @@ function ActorPanel({
               onShapeChange={(shape) => onUpdateGroupingShape(grouping.id, shape)}
               shape={grouping.shape}
             >
-              {actors
-                .filter((actor) => actor.groupingId === grouping.id)
-                .map((actor) => renderActor(actor))}
+              {(actorsByGroupingId.get(grouping.id) ?? []).map((actor) =>
+                renderActor(actor),
+              )}
             </Grouping>
           ))}
 
@@ -206,7 +166,7 @@ function ActorPanel({
           onContextMenu={(event) => {
             event.preventDefault();
             event.stopPropagation();
-            setContextMenuPosition(null);
+            closeContextMenu();
           }}
           style={{
             left: contextMenuPosition.x,
@@ -219,7 +179,7 @@ function ActorPanel({
             disabled={!canAddActor}
             onClick={() => {
               onAddActor();
-              setContextMenuPosition(null);
+              closeContextMenu();
             }}
             type="button"
           >

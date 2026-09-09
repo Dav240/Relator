@@ -4,7 +4,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize)]
 struct DiagramFile {
@@ -12,6 +12,26 @@ struct DiagramFile {
     modified_at: Option<u64>,
     name: String,
     path: String,
+}
+
+#[derive(Deserialize, Serialize)]
+struct UserPreferences {
+    theme: ThemePreference,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+enum ThemePreference {
+    Dark,
+    Light,
+}
+
+impl Default for UserPreferences {
+    fn default() -> Self {
+        Self {
+            theme: ThemePreference::Light,
+        }
+    }
 }
 
 fn timestamp_millis(time: SystemTime) -> Option<u64> {
@@ -58,6 +78,17 @@ fn diagrams_path() -> Result<PathBuf, String> {
         .map(PathBuf::from)
         .map(|local_app_data| local_app_data.join("Relator").join("diagrams"))
         .ok_or_else(|| "LOCALAPPDATA is not available".to_owned())
+}
+
+fn relator_path() -> Result<PathBuf, String> {
+    std::env::var_os("LOCALAPPDATA")
+        .map(PathBuf::from)
+        .map(|local_app_data| local_app_data.join("Relator"))
+        .ok_or_else(|| "LOCALAPPDATA is not available".to_owned())
+}
+
+fn preferences_path() -> Result<PathBuf, String> {
+    relator_path().map(|relator_path| relator_path.join("settings.json"))
 }
 
 #[tauri::command]
@@ -130,6 +161,30 @@ fn delete_diagram(path: String) -> Result<(), String> {
     fs::remove_file(path).map_err(|error| error.to_string())
 }
 
+#[tauri::command]
+fn load_user_preferences() -> Result<UserPreferences, String> {
+    let path = preferences_path()?;
+
+    if !path.exists() {
+        return Ok(UserPreferences::default());
+    }
+
+    let contents = fs::read_to_string(path).map_err(|error| error.to_string())?;
+
+    Ok(serde_json::from_str(&contents).unwrap_or_default())
+}
+
+#[tauri::command]
+fn save_user_preferences(preferences: UserPreferences) -> Result<(), String> {
+    let relator_path = relator_path()?;
+    let path = preferences_path()?;
+    let contents = serde_json::to_string_pretty(&preferences)
+        .map_err(|error| error.to_string())?;
+
+    fs::create_dir_all(relator_path).map_err(|error| error.to_string())?;
+    fs::write(path, contents).map_err(|error| error.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -138,7 +193,9 @@ pub fn run() {
             delete_diagram,
             diagrams_folder_path,
             ensure_diagrams_folder,
+            load_user_preferences,
             load_diagram,
+            save_user_preferences,
             save_diagram,
         ])
         .run(tauri::generate_context!())

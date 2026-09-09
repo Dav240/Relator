@@ -5,13 +5,18 @@ import {
   MenubarMenu,
   MenubarTrigger,
 } from "../../ui/menubar";
+import { Switch } from "../../ui/switch";
 
 function AppMenubar({
+  isDarkMode,
+  onDarkModeChange,
   onNew,
   onOpen,
   onSave,
   onSaveAs,
 }: {
+  isDarkMode: boolean;
+  onDarkModeChange: (isDarkMode: boolean) => void;
   onNew: () => void;
   onOpen?: () => void;
   onSave?: () => void;
@@ -35,6 +40,14 @@ function AppMenubar({
           <MenubarItem>as File</MenubarItem>
         </MenubarContent>
       </MenubarMenu>
+      <div className="flex h-full items-center px-1.5">
+        <Switch
+          aria-label="Toggle dark mode"
+          checked={isDarkMode}
+          onCheckedChange={onDarkModeChange}
+          size="sm"
+        />
+      </div>
     </Menubar>
   );
 }

@@ -1,4 +1,4 @@
-import { getNodeSize } from "../Node";
+import { getNodeSize } from "../shapes";
 
 import type {
   GroupingShape,

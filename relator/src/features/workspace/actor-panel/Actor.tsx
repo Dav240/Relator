@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Textarea } from "../../../ui/textarea";
+import { useContextMenu } from "../context-menu";
 import type {
   RelationshipType,
   WorkspaceActor,
@@ -8,11 +9,6 @@ import type {
   WorkspaceRelationship,
 } from "../types";
 import { Relationship } from "./Relationship";
-
-type ContextMenuPosition = {
-  x: number;
-  y: number;
-};
 
 function Actor({
   actorId,
@@ -59,72 +55,13 @@ function Actor({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isGroupingSubmenuOpen, setIsGroupingSubmenuOpen] = useState(false);
-  const [contextMenuPosition, setContextMenuPosition] =
-    useState<ContextMenuPosition | null>(null);
+  const { closeContextMenu, contextMenuPosition, openContextMenu } =
+    useContextMenu({
+      onClose: () => setIsGroupingSubmenuOpen(false),
+      ownerId: `actor-${actorId}`,
+    });
   const displayName = name.trim() || defaultName;
   const hasRelationships = relationships.length > 0;
-
-  useEffect(() => {
-    if (!contextMenuPosition) {
-      return;
-    }
-
-    function closeContextMenu() {
-      setContextMenuPosition(null);
-      setIsGroupingSubmenuOpen(false);
-    }
-
-    function closeContextMenuOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        closeContextMenu();
-      }
-    }
-
-    function closeContextMenuFromOtherActor(event: Event) {
-      const detail = (event as CustomEvent<{ actorId: string }>).detail;
-
-      if (detail.actorId !== actorId) {
-        closeContextMenu();
-      }
-    }
-
-    window.addEventListener("click", closeContextMenu);
-    window.addEventListener("contextmenu", closeContextMenu);
-    window.addEventListener("actor-context-menu-open", closeContextMenuFromOtherActor);
-    window.addEventListener("keydown", closeContextMenuOnEscape);
-
-    return () => {
-      window.removeEventListener("click", closeContextMenu);
-      window.removeEventListener("contextmenu", closeContextMenu);
-      window.removeEventListener(
-        "actor-context-menu-open",
-        closeContextMenuFromOtherActor,
-      );
-      window.removeEventListener("keydown", closeContextMenuOnEscape);
-    };
-  }, [actorId, contextMenuPosition]);
-
-  function openContextMenu(event: React.MouseEvent<HTMLElement>) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (contextMenuPosition) {
-      setContextMenuPosition(null);
-      setIsGroupingSubmenuOpen(false);
-      return;
-    }
-
-    window.dispatchEvent(
-      new CustomEvent("actor-context-menu-open", {
-        detail: { actorId },
-      }),
-    );
-
-    setContextMenuPosition({
-      x: event.clientX,
-      y: event.clientY,
-    });
-  }
 
   return (
     <section
@@ -194,8 +131,7 @@ function Actor({
           onContextMenu={(event) => {
             event.preventDefault();
             event.stopPropagation();
-            setContextMenuPosition(null);
-            setIsGroupingSubmenuOpen(false);
+            closeContextMenu();
           }}
           style={{
             left: contextMenuPosition.x,
@@ -207,7 +143,7 @@ function Actor({
             onClick={() => {
               onAddRelationship();
               setIsOpen(true);
-              setContextMenuPosition(null);
+              closeContextMenu();
             }}
             type="button"
           >
@@ -217,8 +153,7 @@ function Actor({
             className="flex w-full rounded-sm px-2 py-1 text-left text-sm hover:bg-muted"
             onClick={() => {
               onAddToNewGrouping();
-              setContextMenuPosition(null);
-              setIsGroupingSubmenuOpen(false);
+              closeContextMenu();
             }}
             type="button"
           >
@@ -249,8 +184,7 @@ function Actor({
                     key={grouping.id}
                     onClick={() => {
                       onAddToGrouping(grouping.id);
-                      setContextMenuPosition(null);
-                      setIsGroupingSubmenuOpen(false);
+                      closeContextMenu();
                     }}
                     type="button"
                   >
@@ -265,8 +199,7 @@ function Actor({
               className="flex w-full rounded-sm px-2 py-1 text-left text-sm hover:bg-muted"
               onClick={() => {
                 onRemoveFromGrouping();
-                setContextMenuPosition(null);
-                setIsGroupingSubmenuOpen(false);
+                closeContextMenu();
               }}
               type="button"
             >

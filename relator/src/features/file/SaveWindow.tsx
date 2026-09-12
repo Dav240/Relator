@@ -1,16 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
-import { save as chooseSavePath } from "@tauri-apps/plugin-dialog";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { FilePathFields } from "../global/FilePathFields";
 import { FileWindow } from "../global/FileWindow";
-import {
-  ensureRelatorExtension,
-  ensureRelatorFileName,
-  getDirectoryPath,
-  getFileName,
-  joinPath,
-} from "./path";
+import { useFilePathFields } from "../global/useFilePathFields";
 
 type SaveWindowProps = {
   isOpen: boolean;
@@ -19,90 +13,32 @@ type SaveWindowProps = {
 };
 
 function SaveWindow({ isOpen, onClose, onSave }: SaveWindowProps) {
-  const [directoryPath, setDirectoryPath] = useState("");
-  const [diagramsFolder, setDiagramsFolder] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [fileName, setFileName] = useState("");
-  const [filePath, setFilePath] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    let isMounted = true;
-
-    async function loadDefaultPath() {
-      try {
-        const defaultPath = await invoke<string>("diagrams_folder_path");
-
-        if (isMounted) {
-          setDiagramsFolder(defaultPath);
-          setDirectoryPath(defaultPath);
-          setFileName("");
-          setFilePath(defaultPath);
-          setError(null);
-        }
-      } catch (loadError) {
-        if (isMounted) {
-          setError(loadError instanceof Error ? loadError.message : String(loadError));
-        }
-      }
-    }
-
-    loadDefaultPath();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isOpen]);
+  const {
+    choosePath,
+    error,
+    fileName,
+    filePath,
+    getResolvedPath,
+    setError,
+    updateFileName,
+    updateFilePath,
+  } = useFilePathFields({
+    defaultExtension: "relator",
+    dialogFilterName: "Relator diagrams",
+    extensions: ["relator"],
+    getDefaultDirectory: () => invoke<string>("diagrams_folder_path"),
+    isOpen,
+  });
 
   if (!isOpen) {
     return null;
   }
 
-  function updateFileName(nextFileName: string) {
-    const directory = directoryPath || diagramsFolder;
-    const relatorFileName = ensureRelatorFileName(nextFileName);
-
-    setFileName(nextFileName);
-    setFilePath(relatorFileName ? joinPath(directory, relatorFileName) : directory);
-  }
-
-  function updateFilePath(nextFilePath: string) {
-    const nextDirectoryPath = getDirectoryPath(nextFilePath) || diagramsFolder;
-
-    setDirectoryPath(nextDirectoryPath);
-    setFilePath(nextFilePath);
-    setFileName(getFileName(nextFilePath));
-  }
-
-  async function choosePath() {
-    try {
-      const selectedPath = await chooseSavePath({
-        defaultPath: filePath || diagramsFolder,
-        filters: [{ name: "Relator diagrams", extensions: ["relator"] }],
-      });
-
-      if (!selectedPath) {
-        return;
-      }
-
-      updateFilePath(ensureRelatorExtension(selectedPath));
-    } catch (pathError) {
-      setError(pathError instanceof Error ? pathError.message : String(pathError));
-    }
-  }
-
   async function submitSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const relatorFileName = ensureRelatorFileName(fileName);
-    const saveDirectory = directoryPath || diagramsFolder;
-    const savePath = filePath.trim().toLowerCase().endsWith(".relator")
-      ? ensureRelatorExtension(filePath.trim())
-      : joinPath(saveDirectory, relatorFileName);
+    const savePath = getResolvedPath();
 
     if (!fileName.trim() || !savePath.trim()) {
       return;
@@ -123,20 +59,23 @@ function SaveWindow({ isOpen, onClose, onSave }: SaveWindowProps) {
   return (
     <FileWindow
       actionLabel="Save"
-      autoFocusName
       error={error}
-      fileName={fileName}
-      filePath={filePath}
       isActionDisabled={!fileName.trim() || !filePath.trim()}
       isBusy={isSaving}
       isOpen={isOpen}
-      onChoosePath={choosePath}
       onClose={onClose}
-      onFileNameChange={updateFileName}
-      onFilePathChange={updateFilePath}
       onSubmit={submitSave}
       title="Save as"
-    />
+    >
+      <FilePathFields
+        autoFocusName
+        fileName={fileName}
+        filePath={filePath}
+        onChoosePath={choosePath}
+        onFileNameChange={updateFileName}
+        onFilePathChange={updateFilePath}
+      />
+    </FileWindow>
   );
 }
 

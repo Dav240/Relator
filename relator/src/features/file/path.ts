@@ -8,6 +8,20 @@ function ensureFileExtension(path: string, extension: string) {
     : `${path}${normalisedExtension}`;
 }
 
+function replaceFileExtension(path: string, extension: string) {
+  const normalisedExtension = extension.startsWith(".")
+    ? extension.toLowerCase()
+    : `.${extension.toLowerCase()}`;
+  const lastBackslash = path.lastIndexOf("\\");
+  const lastSlash = path.lastIndexOf("/");
+  const separatorIndex = Math.max(lastBackslash, lastSlash);
+  const directory = separatorIndex >= 0 ? path.slice(0, separatorIndex + 1) : "";
+  const basename = path.slice(separatorIndex + 1);
+  const extensionlessBasename = basename.replace(/\.[^.]+$/i, "");
+
+  return `${directory}${extensionlessBasename}${normalisedExtension}`;
+}
+
 function ensureFileNameExtension(fileName: string, extension: string) {
   const trimmedName = fileName.trim();
 
@@ -77,4 +91,5 @@ export {
   getDirectoryPath,
   getFileName,
   joinPath,
+  replaceFileExtension,
 };

@@ -1,32 +1,10 @@
-import { getNodeSize } from "../shapes";
+import { getNodeSize, getShapeDefinition } from "../shapes";
 
 import type {
   GroupingShape,
   Position,
   WorkspaceActor,
 } from "../../types";
-
-const STAR_POINTS = [
-  { x: 0.5, y: 0.04 },
-  { x: 0.61, y: 0.35 },
-  { x: 0.94, y: 0.35 },
-  { x: 0.67, y: 0.55 },
-  { x: 0.78, y: 0.88 },
-  { x: 0.5, y: 0.68 },
-  { x: 0.22, y: 0.88 },
-  { x: 0.33, y: 0.55 },
-  { x: 0.06, y: 0.35 },
-  { x: 0.39, y: 0.35 },
-];
-
-const HEXAGON_POINTS = [
-  { x: 0.25, y: 0.06 },
-  { x: 0.75, y: 0.06 },
-  { x: 1, y: 0.5 },
-  { x: 0.75, y: 0.94 },
-  { x: 0.25, y: 0.94 },
-  { x: 0, y: 0.5 },
-];
 
 function getDisplayName(actor: WorkspaceActor) {
   return actor.name.trim() || actor.defaultName;
@@ -52,27 +30,19 @@ function getBoundaryPoint({
   center: Position & { height: number; width: number };
   shape: GroupingShape;
 }) {
-  if (shape === "square" || shape === "rectangle") {
+  const shapeDefinition = getShapeDefinition(shape);
+
+  if (shapeDefinition.boundary === "rectangle") {
     return getRectangleBoundaryPoint(center, center.width, center.height, angle);
   }
 
-  if (shape === "star") {
+  if (shapeDefinition.boundary === "polygon" && shapeDefinition.polygonPoints) {
     return getPolygonBoundaryPoint(
       center,
       center.width,
       center.height,
       angle,
-      STAR_POINTS,
-    );
-  }
-
-  if (shape === "hexagon") {
-    return getPolygonBoundaryPoint(
-      center,
-      center.width,
-      center.height,
-      angle,
-      HEXAGON_POINTS,
+      shapeDefinition.polygonPoints,
     );
   }
 

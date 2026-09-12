@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 import type {
   EdgeLayout,
@@ -55,15 +55,18 @@ function Edge({
 }) {
   const markerId = useId().replace(/:/g, "");
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const [draftEdgeLayout, setDraftEdgeLayout] = useState<EdgeLayout | null>(null);
+  const latestEdgeLayoutRef = useRef<EdgeLayout | null>(null);
+  const edgeLayout = draftEdgeLayout ?? relationship.edgeLayout;
   const sourceCenter = getNodeCenter(sourceActor, sourceShape);
   const targetCenter = getNodeCenter(targetActor, targetShape);
   const sourcePoint = getBoundaryPoint({
-    angle: relationship.edgeLayout.sourceAngle,
+    angle: edgeLayout.sourceAngle,
     center: sourceCenter,
     shape: sourceShape,
   });
   const targetPoint = getBoundaryPoint({
-    angle: relationship.edgeLayout.targetAngle,
+    angle: edgeLayout.targetAngle,
     center: targetCenter,
     shape: targetShape,
   });
@@ -71,20 +74,23 @@ function Edge({
   const labelPosition = {
     x:
       (sourcePoint.x + targetPoint.x) / 2 +
-      relationship.edgeLayout.labelOffset.x,
+      edgeLayout.labelOffset.x,
     y:
       (sourcePoint.y + targetPoint.y) / 2 +
-      relationship.edgeLayout.labelOffset.y,
+      edgeLayout.labelOffset.y,
   };
 
   const label = relationship.name.trim();
   const labelAngle = getReadableAngle(sourcePoint, targetPoint);
 
   function updateEdgeLayout(edgeLayout: Partial<EdgeLayout>) {
-    onLayoutChange({
-      ...relationship.edgeLayout,
+    const nextEdgeLayout = {
+      ...(latestEdgeLayoutRef.current ?? relationship.edgeLayout),
       ...edgeLayout,
-    });
+    };
+
+    latestEdgeLayoutRef.current = nextEdgeLayout;
+    setDraftEdgeLayout(nextEdgeLayout);
   }
 
   function startEndpointDrag(
@@ -94,6 +100,8 @@ function Edge({
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
+    latestEdgeLayoutRef.current = relationship.edgeLayout;
+    setDraftEdgeLayout(relationship.edgeLayout);
     setDragState({ type });
   }
 
@@ -120,8 +128,10 @@ function Edge({
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
+    latestEdgeLayoutRef.current = relationship.edgeLayout;
+    setDraftEdgeLayout(relationship.edgeLayout);
     setDragState({
-      originOffset: relationship.edgeLayout.labelOffset,
+      originOffset: edgeLayout.labelOffset,
       pointerOrigin: getMapPoint(event),
       type: "label",
     });
@@ -148,6 +158,13 @@ function Edge({
   function stopDragging(event: React.PointerEvent<SVGElement>) {
     event.preventDefault();
     event.stopPropagation();
+
+    if (dragState && latestEdgeLayoutRef.current) {
+      onLayoutChange(latestEdgeLayoutRef.current);
+    }
+
+    latestEdgeLayoutRef.current = null;
+    setDraftEdgeLayout(null);
     setDragState(null);
   }
 

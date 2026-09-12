@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Shape } from "./shapes";
 import type { GroupingColour, GroupingShape, Position } from "../types";
@@ -24,10 +24,20 @@ function Node({
   shape?: GroupingShape;
 }) {
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const [dragPosition, setDragPosition] = useState<Position | null>(null);
+  const latestDragPositionRef = useRef(position);
+  const visiblePosition = dragPosition ?? position;
+
+  useEffect(() => {
+    if (!dragState) {
+      latestDragPositionRef.current = position;
+    }
+  }, [dragState, position]);
 
   function startDragging(event: React.PointerEvent<HTMLDivElement>) {
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
+    latestDragPositionRef.current = position;
 
     setDragState({
       originX: position.x,
@@ -43,14 +53,23 @@ function Node({
     }
 
     event.stopPropagation();
-    onMove({
+    const nextPosition = {
       x: dragState.originX + event.clientX - dragState.pointerX,
       y: dragState.originY + event.clientY - dragState.pointerY,
-    });
+    };
+
+    latestDragPositionRef.current = nextPosition;
+    setDragPosition(nextPosition);
   }
 
   function stopDragging(event: React.PointerEvent<HTMLDivElement>) {
     event.stopPropagation();
+
+    if (dragState) {
+      onMove(latestDragPositionRef.current);
+    }
+
+    setDragPosition(null);
     setDragState(null);
   }
 
@@ -62,7 +81,7 @@ function Node({
       onPointerMove={dragNode}
       onPointerUp={stopDragging}
       style={{
-        transform: `translate(${position.x}px, ${position.y}px)`,
+        transform: `translate(${visiblePosition.x}px, ${visiblePosition.y}px)`,
       }}
     >
       <Shape colour={colour} label={label} shape={shape} />

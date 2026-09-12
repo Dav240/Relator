@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import type { LoadedRelatorDiagram } from "../file/load";
 import { ExportWindow } from "../export/ExportWindow";
-import type { ExportMode } from "../export/ExportWindow";
+import type { ExportMode } from "../export/export";
 import { saveDiagram } from "../file/save";
 import { AppMenubar } from "../global/Menubar";
 import { setDiagramWindowTitle } from "../global/window-title";

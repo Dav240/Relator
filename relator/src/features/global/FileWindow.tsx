@@ -2,45 +2,27 @@ import type { FormEvent, ReactNode } from "react";
 
 type FileWindowProps = {
   actionLabel: string;
-  afterName?: ReactNode;
-  autoFocusName?: boolean;
   children?: ReactNode;
   error: string | null;
-  fields?: ReactNode;
-  fileName: string;
-  filePath: string;
   formClassName?: string;
   isActionDisabled?: boolean;
   isBusy?: boolean;
   isOpen: boolean;
-  onChoosePath: () => void;
   onClose: () => void;
-  onFileNameChange: (fileName: string) => void;
-  onFilePathChange: (filePath: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  pathLabel?: string;
   title: string;
 };
 
 function FileWindow({
   actionLabel,
-  afterName,
-  autoFocusName,
   children,
   error,
-  fields,
-  fileName,
-  filePath,
   formClassName = "",
   isActionDisabled,
   isBusy,
   isOpen,
-  onChoosePath,
   onClose,
-  onFileNameChange,
-  onFilePathChange,
   onSubmit,
-  pathLabel = "File Path",
   title,
 }: FileWindowProps) {
   if (!isOpen) {
@@ -54,40 +36,6 @@ function FileWindow({
         onSubmit={onSubmit}
       >
         <div className="mb-4 text-base font-medium">{title}</div>
-
-        {fields ?? (
-          <>
-            <label className="mb-3 block">
-              <span className="mb-1 block text-xs font-medium">File Name</span>
-              <input
-                autoFocus={autoFocusName}
-                className="h-9 w-full rounded-sm border border-input bg-background px-2 outline-none focus:border-ring"
-                onChange={(event) => onFileNameChange(event.target.value)}
-                value={fileName}
-              />
-            </label>
-
-            {afterName}
-
-            <label className="mb-3 block">
-              <span className="mb-1 block text-xs font-medium">{pathLabel}</span>
-              <div className="flex gap-2">
-                <input
-                  className="h-9 min-w-0 flex-1 rounded-sm border border-input bg-background px-2 outline-none focus:border-ring"
-                  onChange={(event) => onFilePathChange(event.target.value)}
-                  value={filePath}
-                />
-                <button
-                  className="h-9 w-10 rounded-sm border border-border bg-background hover:bg-muted"
-                  onClick={onChoosePath}
-                  type="button"
-                >
-                  ...
-                </button>
-              </div>
-            </label>
-          </>
-        )}
 
         {children}
 

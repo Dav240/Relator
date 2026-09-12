@@ -65,6 +65,20 @@ fn resolve_diagram_path(path: &str) -> Result<PathBuf, String> {
     }
 }
 
+fn resolve_output_path(path: &str) -> Result<PathBuf, String> {
+    if path.trim().is_empty() {
+        return Err("Path cannot be empty".to_owned());
+    }
+
+    let path = PathBuf::from(path);
+
+    if path.is_absolute() {
+        Ok(path)
+    } else {
+        diagrams_path().map(|diagrams_path| diagrams_path.join(path))
+    }
+}
+
 fn ensure_relator_extension(mut path: PathBuf) -> PathBuf {
     if path.extension().and_then(|extension| extension.to_str()) != Some("relator") {
         path.set_extension("relator");
@@ -148,6 +162,19 @@ fn save_diagram(path: String, contents: String) -> Result<String, String> {
 }
 
 #[tauri::command]
+fn save_export_file(path: String, bytes: Vec<u8>) -> Result<String, String> {
+    let path = resolve_output_path(&path)?;
+
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+    }
+
+    fs::write(&path, bytes).map_err(|error| error.to_string())?;
+
+    Ok(path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
 fn load_diagram(path: String) -> Result<String, String> {
     let path = ensure_relator_extension(resolve_diagram_path(&path)?);
 
@@ -185,6 +212,11 @@ fn save_user_preferences(preferences: UserPreferences) -> Result<(), String> {
     fs::write(path, contents).map_err(|error| error.to_string())
 }
 
+#[tauri::command]
+fn set_window_title(window: tauri::Window, title: String) -> Result<(), String> {
+    window.set_title(&title).map_err(|error| error.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -195,8 +227,10 @@ pub fn run() {
             ensure_diagrams_folder,
             load_user_preferences,
             load_diagram,
+            save_export_file,
             save_user_preferences,
             save_diagram,
+            set_window_title,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

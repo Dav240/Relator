@@ -9,6 +9,10 @@ import {
   saveUserPreferences,
 } from "./features/global/theme";
 import type { ThemeMode } from "./features/global/theme";
+import {
+  setDefaultWindowTitle,
+  setDiagramWindowTitle,
+} from "./features/global/window-title";
 import Workspace from "./features/workspace/Workspace";
 
 type AppView = "home" | "workspace";
@@ -58,6 +62,9 @@ function App() {
     setInitialDiagram(null);
     setWorkspaceKey((currentKey) => currentKey + 1);
     setView("workspace");
+    setDefaultWindowTitle().catch((error) => {
+      console.error("Failed to update window title", error);
+    });
   }
 
   async function openDiagram(path?: string) {
@@ -73,6 +80,9 @@ function App() {
       setInitialDiagram(diagram);
       setWorkspaceKey((currentKey) => currentKey + 1);
       setView("workspace");
+      setDiagramWindowTitle(diagram.originalFilePath).catch((error) => {
+        console.error("Failed to update window title", error);
+      });
     } catch (error) {
       console.error("Failed to load diagram", error);
     }

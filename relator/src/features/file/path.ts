@@ -1,15 +1,29 @@
-function ensureRelatorExtension(path: string) {
-  return path.toLowerCase().endsWith(".relator") ? path : `${path}.relator`;
+function ensureFileExtension(path: string, extension: string) {
+  const normalisedExtension = extension.startsWith(".")
+    ? extension.toLowerCase()
+    : `.${extension.toLowerCase()}`;
+
+  return path.toLowerCase().endsWith(normalisedExtension)
+    ? path
+    : `${path}${normalisedExtension}`;
 }
 
-function ensureRelatorFileName(fileName: string) {
+function ensureFileNameExtension(fileName: string, extension: string) {
   const trimmedName = fileName.trim();
 
   if (!trimmedName) {
     return "";
   }
 
-  return ensureRelatorExtension(trimmedName);
+  return ensureFileExtension(trimmedName, extension);
+}
+
+function ensureRelatorExtension(path: string) {
+  return ensureFileExtension(path, "relator");
+}
+
+function ensureRelatorFileName(fileName: string) {
+  return ensureFileNameExtension(fileName, "relator");
 }
 
 function getDirectoryPath(path: string) {
@@ -24,13 +38,21 @@ function getDirectoryPath(path: string) {
   return path.slice(0, separatorIndex);
 }
 
-function getFileName(path: string) {
+function getFileName(path: string, extension?: string) {
   const lastBackslash = path.lastIndexOf("\\");
   const lastSlash = path.lastIndexOf("/");
   const separatorIndex = Math.max(lastBackslash, lastSlash);
   const basename = path.slice(separatorIndex + 1);
 
-  return basename.replace(/\.relator$/i, "");
+  if (!extension) {
+    return basename.replace(/\.[^.]+$/i, "");
+  }
+
+  const normalisedExtension = extension.startsWith(".")
+    ? extension.slice(1)
+    : extension;
+
+  return basename.replace(new RegExp(`\\.${normalisedExtension}$`, "i"), "");
 }
 
 function joinPath(directory: string, fileName: string) {
@@ -48,6 +70,8 @@ function joinPath(directory: string, fileName: string) {
 }
 
 export {
+  ensureFileExtension,
+  ensureFileNameExtension,
   ensureRelatorExtension,
   ensureRelatorFileName,
   getDirectoryPath,

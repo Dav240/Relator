@@ -3,13 +3,14 @@ import { save as chooseSavePath } from "@tauri-apps/plugin-dialog";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
+import { FileWindow } from "../global/FileWindow";
 import {
   ensureRelatorExtension,
   ensureRelatorFileName,
   getDirectoryPath,
   getFileName,
   joinPath,
-} from "../file/path";
+} from "./path";
 
 type SaveWindowProps = {
   isOpen: boolean;
@@ -120,61 +121,22 @@ function SaveWindow({ isOpen, onClose, onSave }: SaveWindowProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--modal-backdrop)]">
-      <form
-        className="w-[32rem] max-w-[calc(100vw-2rem)] rounded-sm border border-border bg-background p-4 text-sm text-foreground shadow-lg"
-        onSubmit={submitSave}
-      >
-        <div className="mb-4 text-base font-medium">Save as</div>
-
-        <label className="mb-3 block">
-          <span className="mb-1 block text-xs font-medium">File Name</span>
-          <input
-            autoFocus
-            className="h-9 w-full rounded-sm border border-input bg-background px-2 outline-none focus:border-ring"
-            onChange={(event) => updateFileName(event.target.value)}
-            value={fileName}
-          />
-        </label>
-
-        <label className="mb-3 block">
-          <span className="mb-1 block text-xs font-medium">File Path</span>
-          <div className="flex gap-2">
-            <input
-              className="h-9 min-w-0 flex-1 rounded-sm border border-input bg-background px-2 outline-none focus:border-ring"
-              onChange={(event) => updateFilePath(event.target.value)}
-              value={filePath}
-            />
-            <button
-              className="h-9 w-10 rounded-sm border border-border bg-background hover:bg-muted"
-              onClick={choosePath}
-              type="button"
-            >
-              ...
-            </button>
-          </div>
-        </label>
-
-        {error ? <div className="mb-3 text-xs text-destructive">{error}</div> : null}
-
-        <div className="flex justify-end gap-2">
-          <button
-            className="h-8 rounded-sm border border-border px-3 hover:bg-muted"
-            onClick={onClose}
-            type="button"
-          >
-            Cancel
-          </button>
-          <button
-            className="h-8 rounded-sm border border-border bg-foreground px-3 text-background disabled:opacity-50"
-            disabled={!fileName.trim() || !filePath.trim() || isSaving}
-            type="submit"
-          >
-            Save
-          </button>
-        </div>
-      </form>
-    </div>
+    <FileWindow
+      actionLabel="Save"
+      autoFocusName
+      error={error}
+      fileName={fileName}
+      filePath={filePath}
+      isActionDisabled={!fileName.trim() || !filePath.trim()}
+      isBusy={isSaving}
+      isOpen={isOpen}
+      onChoosePath={choosePath}
+      onClose={onClose}
+      onFileNameChange={updateFileName}
+      onFilePathChange={updateFilePath}
+      onSubmit={submitSave}
+      title="Save as"
+    />
   );
 }
 

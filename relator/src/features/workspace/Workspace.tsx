@@ -2,9 +2,12 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useState } from "react";
 
 import type { LoadedRelatorDiagram } from "../file/load";
+import { ExportWindow } from "../export/ExportWindow";
+import type { ExportMode } from "../export/ExportWindow";
 import { saveDiagram } from "../file/save";
 import { AppMenubar } from "../global/Menubar";
-import { SaveWindow } from "../global/SaveWindow";
+import { setDiagramWindowTitle } from "../global/window-title";
+import { SaveWindow } from "../file/SaveWindow";
 import { ActorPanel } from "./actor-panel/ActorPanel";
 import { ACTOR_PANEL_TOGGLE_LEFT_REM } from "./actor-panel/sizing";
 import { SlippyMap } from "./diagram/SlippyMap";
@@ -43,6 +46,7 @@ function Workspace({
     updateRelationship,
     updateRelationshipEdgeLayout,
   } = useWorkspaceDiagram(initialDiagram);
+  const [exportMode, setExportMode] = useState<ExportMode | null>(null);
   const [isActorPanelOpen, setIsActorPanelOpen] = useState(true);
   const [isSaveWindowOpen, setIsSaveWindowOpen] = useState(false);
   const [originalFilePath, setOriginalFilePath] = useState(
@@ -57,6 +61,9 @@ function Workspace({
 
     setOriginalFilePath(savedPath);
     setIsSaveWindowOpen(false);
+    setDiagramWindowTitle(savedPath).catch((error) => {
+      console.error("Failed to update window title", error);
+    });
   }
 
   async function saveCurrentDiagram() {
@@ -78,6 +85,8 @@ function Workspace({
         <AppMenubar
           isDarkMode={isDarkMode}
           onDarkModeChange={onDarkModeChange}
+          onExportFile={() => setExportMode("pdf")}
+          onExportImage={() => setExportMode("image")}
           onNew={onNew}
           onOpen={onOpen}
           onSave={saveCurrentDiagram}
@@ -141,6 +150,11 @@ function Workspace({
         isOpen={isSaveWindowOpen}
         onClose={() => setIsSaveWindowOpen(false)}
         onSave={saveToPath}
+      />
+      <ExportWindow
+        isOpen={exportMode !== null}
+        mode={exportMode ?? "image"}
+        onClose={() => setExportMode(null)}
       />
     </main>
   );

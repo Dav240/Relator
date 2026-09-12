@@ -12,6 +12,8 @@ function AppMenubar({
   onDarkModeChange,
   onNew,
   onOpen,
+  onExportFile,
+  onExportImage,
   onSave,
   onSaveAs,
 }: {
@@ -19,6 +21,8 @@ function AppMenubar({
   onDarkModeChange: (isDarkMode: boolean) => void;
   onNew: () => void;
   onOpen?: () => void;
+  onExportFile?: () => void;
+  onExportImage?: () => void;
   onSave?: () => void;
   onSaveAs?: () => void;
 }) {
@@ -36,8 +40,8 @@ function AppMenubar({
       <MenubarMenu>
         <MenubarTrigger>Export</MenubarTrigger>
         <MenubarContent>
-          <MenubarItem>as Image</MenubarItem>
-          <MenubarItem>as File</MenubarItem>
+          <MenubarItem onClick={() => onExportImage?.()}>as Image</MenubarItem>
+          <MenubarItem onClick={() => onExportFile?.()}>as PDF</MenubarItem>
         </MenubarContent>
       </MenubarMenu>
       <div className="flex h-full items-center px-1.5">

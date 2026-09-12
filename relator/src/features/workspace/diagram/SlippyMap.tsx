@@ -146,6 +146,7 @@ function SlippyMap({
     <div
       ref={viewportRef}
       className="relative min-w-0 flex-1 cursor-grab overflow-hidden bg-[var(--map-background)] active:cursor-grabbing"
+      data-relator-export-target="diagram"
       onPointerCancel={stopPanning}
       onPointerDown={startPanning}
       onPointerMove={panMap}

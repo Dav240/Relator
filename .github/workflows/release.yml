@@ -54,7 +54,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: relator
-          tauriScript: npm run tauri --
+          tauriScript: npm run tauri
           tagName: ${{ github.ref_name }}
           releaseName: Relator ${{ github.ref_name }}
           releaseBody: "See the assets below to download this release."
